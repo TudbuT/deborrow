@@ -20,33 +20,41 @@ pub fn deborrow(ts: TokenStream) -> TokenStream {
     let fields = ts.collect::<Vec<_>>();
     let mut result = Vec::new();
     result.append(
-        &mut ("fn __deborrow_unify<'a, T> (){}"
+        &mut ("fn __deborrow_unify<'a, "
             .parse::<TokenStream>()
             .unwrap()
             .into_iter()
             .collect::<Vec<_>>()),
     );
-    result.pop();
-    result.pop();
+    result.append(
+        &mut fields
+            .iter()
+            .flat_map(|x| {
+                vec![
+                    x.to_owned(),
+                    TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+                ]
+            })
+            .collect::<Vec<_>>(),
+    );
+    result.push(TokenTree::Punct(Punct::new('>', Spacing::Alone)));
     result.push(TokenTree::Group(Group::new(
         Delimiter::Parenthesis,
-        TokenStream::from_iter(
-            fields
-                .iter()
-                .map(|x| {
-                    vec![
-                        x.to_owned(),
-                        TokenTree::Punct(Punct::new(':', Spacing::Alone)),
-                        TokenTree::Punct(Punct::new('&', Spacing::Joint)),
-                        TokenTree::Punct(Punct::new('\'', Spacing::Joint)),
-                        TokenTree::Ident(Ident::new("a", Span::mixed_site())),
-                        TokenTree::Ident(Ident::new("mut", Span::mixed_site())),
-                        TokenTree::Ident(Ident::new("T", Span::mixed_site())),
-                        TokenTree::Punct(Punct::new(',', Spacing::Alone)),
-                    ]
-                })
-                .flatten(),
-        ),
+        TokenStream::from_iter(fields.iter().flat_map(|x| {
+            vec![
+                x.to_owned(),
+                TokenTree::Punct(Punct::new(':', Spacing::Alone)),
+                TokenTree::Punct(Punct::new('&', Spacing::Joint)),
+                TokenTree::Punct(Punct::new('\'', Spacing::Joint)),
+                TokenTree::Ident(Ident::new("a", Span::mixed_site())),
+                TokenTree::Ident(Ident::new("mut", Span::mixed_site())),
+                TokenTree::Ident(Ident::new(
+                    &("T".to_owned() + &x.to_string()),
+                    Span::mixed_site(),
+                )),
+                TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+            ]
+        })),
     )));
     result.append(
         &mut ("->"
@@ -57,42 +65,35 @@ pub fn deborrow(ts: TokenStream) -> TokenStream {
     );
     result.push(TokenTree::Group(Group::new(
         Delimiter::Parenthesis,
-        TokenStream::from_iter(
-            fields
-                .iter()
-                .map(|_| {
-                    vec![
-                        TokenTree::Punct(Punct::new('&', Spacing::Joint)),
-                        TokenTree::Punct(Punct::new('\'', Spacing::Joint)),
-                        TokenTree::Ident(Ident::new("a", Span::mixed_site())),
-                        TokenTree::Ident(Ident::new("mut", Span::mixed_site())),
-                        TokenTree::Ident(Ident::new("T", Span::mixed_site())),
-                        TokenTree::Punct(Punct::new(',', Spacing::Alone)),
-                    ]
-                })
-                .flatten(),
-        ),
+        TokenStream::from_iter(fields.iter().flat_map(|x| {
+            vec![
+                TokenTree::Punct(Punct::new('&', Spacing::Joint)),
+                TokenTree::Punct(Punct::new('\'', Spacing::Joint)),
+                TokenTree::Ident(Ident::new("a", Span::mixed_site())),
+                TokenTree::Ident(Ident::new("mut", Span::mixed_site())),
+                TokenTree::Ident(Ident::new(
+                    &("T".to_owned() + &x.to_string()),
+                    Span::mixed_site(),
+                )),
+                TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+            ]
+        })),
     )));
     result.push(TokenTree::Group(Group::new(
         Delimiter::Brace,
         TokenTree::Group(Group::new(
             Delimiter::Parenthesis,
-            TokenStream::from_iter(
-                fields
-                    .iter()
-                    .map(|x| {
-                        vec![
-                            x.to_owned(),
-                            TokenTree::Punct(Punct::new(',', Spacing::Alone)),
-                        ]
-                    })
-                    .flatten(),
-            ),
+            TokenStream::from_iter(fields.iter().flat_map(|x| {
+                vec![
+                    x.to_owned(),
+                    TokenTree::Punct(Punct::new(',', Spacing::Alone)),
+                ]
+            })),
         ))
         .into(),
     )));
     let mut tuple = vec![];
-    for i in 0..fields.len() - 1 {
+    for field in &fields[0..fields.len() - 1] {
         tuple.push(TokenTree::Ident(Ident::new("unsafe", Span::mixed_site())));
         let mut e = ("::deborrow::deborrow".parse::<TokenStream>().unwrap())
             .into_iter()
@@ -104,7 +105,7 @@ pub fn deborrow(ts: TokenStream) -> TokenStream {
                 TokenTree::Ident(Ident::new("mut", Span::mixed_site())),
                 item.clone(),
                 TokenTree::Punct(Punct::new('.', Spacing::Alone)),
-                fields[i].clone(),
+                field.clone(),
             ]),
         )));
         tuple.push(TokenTree::Group(Group::new(
@@ -113,13 +114,13 @@ pub fn deborrow(ts: TokenStream) -> TokenStream {
         )));
         tuple.push(TokenTree::Punct(Punct::new(',', Spacing::Alone)));
     }
-    if fields.len() > 0 {
+    if !fields.is_empty() {
         tuple.push(TokenTree::Group(Group::new(
             Delimiter::Parenthesis,
             TokenStream::from_iter(vec![
                 TokenTree::Punct(Punct::new('&', Spacing::Joint)),
                 TokenTree::Ident(Ident::new("mut", Span::mixed_site())),
-                item.clone(),
+                item,
                 TokenTree::Punct(Punct::new('.', Spacing::Alone)),
                 fields[fields.len() - 1].clone(),
             ]),
