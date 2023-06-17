@@ -31,7 +31,10 @@ pub fn deborrow(ts: TokenStream) -> TokenStream {
             .iter()
             .flat_map(|x| {
                 vec![
-                    x.to_owned(),
+                    TokenTree::Ident(Ident::new(
+                        &("T".to_owned() + &x.to_string()),
+                        Span::mixed_site(),
+                    )),
                     TokenTree::Punct(Punct::new(',', Spacing::Alone)),
                 ]
             })
