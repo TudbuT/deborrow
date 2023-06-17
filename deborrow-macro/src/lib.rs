@@ -9,15 +9,17 @@ pub fn deborrow(ts: TokenStream) -> TokenStream {
     let mut ts = ts.into_iter();
     let item = ts
         .next()
-        .expect("expected item in deborrow!($item, $($field )*)");
+        .expect("expected item in deborrow!($item $(,$|:) $($field $(,)? )*)");
     if !matches!(
         ts.next(),
         Some(TokenTree::Punct(x))
-        if x.as_char() == ','
+        if x.as_char() == ',' || x.as_char() == ':'
     ) {
-        panic!("expected , in deborrow!($item, $($field )*)");
+        panic!("expected , in deborrow!($item $(,$|:) $($field $(,)? )*)");
     }
-    let fields = ts.collect::<Vec<_>>();
+    let fields = ts
+        .filter(|x| !matches!(x, TokenTree::Punct(_)))
+        .collect::<Vec<_>>();
     let mut result = Vec::new();
     result.append(
         &mut ("fn __deborrow_unify<'a, "
