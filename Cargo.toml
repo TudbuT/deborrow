@@ -1,6 +1,6 @@
 [package]
 name = "deborrow"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 license = "CC0-1.0"
 description = "Splits mutable references safely into their fields, or slightly less safely unborrows something completely."
@@ -9,4 +9,4 @@ repository = "https://github.com/tudbut/deborrow"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-deborrow-macro = { path = "./deborrow-macro", version = "0.1" }
+deborrow-macro = { path = "./deborrow-macro", version = "0.2" }

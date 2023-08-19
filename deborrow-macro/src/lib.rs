@@ -100,7 +100,7 @@ pub fn deborrow(ts: TokenStream) -> TokenStream {
     let mut tuple = vec![];
     for field in &fields[0..fields.len() - 1] {
         tuple.push(TokenTree::Ident(Ident::new("unsafe", Span::mixed_site())));
-        let mut e = ("::deborrow::deborrow".parse::<TokenStream>().unwrap())
+        let mut e = ("::deborrow::deborrow_mut".parse::<TokenStream>().unwrap())
             .into_iter()
             .collect::<Vec<_>>();
         e.push(TokenTree::Group(Group::new(
