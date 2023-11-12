@@ -32,8 +32,8 @@ impl<'a, T: ?Sized> Reference<'a, T, true> {
 
     /// Turns the Reference into a mutable ref if it has been created
     /// from a mutable ref.
-    pub unsafe fn as_mut(&self) -> Option<&'a mut T> {
-        Some(self.ptr.cast_mut().as_mut().unwrap()) // never null
+    pub unsafe fn as_mut(&self) -> &'a mut T {
+        self.ptr.cast_mut().as_mut().unwrap() // never null
     }
 }
 

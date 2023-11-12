@@ -2,6 +2,13 @@ use deborrow::*;
 use std::mem;
 
 fn main() {
+    println!("This won't compile anyway.");
+}
+
+// need to exclude from tests since it wont compile
+#[test]
+#[ignore]
+fn cant_compile() {
     #[derive(Debug)]
     struct AStruct {
         a: u64,
